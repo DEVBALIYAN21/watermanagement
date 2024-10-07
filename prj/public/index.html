@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Usage Tracker</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Link to your CSS file -->
+</head>
+<body>
+    <div class="container">
+        <h1>Water Usage Tracker</h1>
+        <form id="usageForm">
+            <label for="drinking">Drinking:</label>
+            <input type="number" id="drinking" name="drinking" required step="0.01">
+
+            <label for="cooking">Cooking:</label>
+            <input type="number" id="cooking" name="cooking" required step="0.01">
+
+            <label for="bathing">Bathing:</label>
+            <input type="number" id="bathing" name="bathing" required step="0.01">
+
+            <label for="cleaning">Cleaning:</label>
+            <input type="number" id="cleaning" name="cleaning" required step="0.01">
+
+            <label for="laundry">Laundry:</label>
+            <input type="number" id="laundry" name="laundry" required step="0.01">
+
+            <label for="flushes">Flushes:</label>
+            <input type="number" id="flushes" name="flushes" required step="0.01">
+
+            <label for="miscellaneous">Miscellaneous:</label>
+            <input type="number" id="miscellaneous" name="miscellaneous" required step="0.01">
+
+            <button type="submit">Submit Usage Data</button>
+        </form>
+        <div id="message"></div> <!-- For feedback messages -->
+    </div>
+
+    <script>
+// Handle form submission
+document.getElementById('usageForm').addEventListener('submit', async function (event) {
+    event.preventDefault(); // Prevent the default form submission
+
+    // Gather form data
+    const usageData = {
+        drinking: parseFloat(document.getElementById('drinking').value),
+        cooking: parseFloat(document.getElementById('cooking').value),
+        bathing: parseFloat(document.getElementById('bathing').value),
+        cleaning: parseFloat(document.getElementById('cleaning').value),
+        laundry: parseFloat(document.getElementById('laundry').value),
+        flushes: parseFloat(document.getElementById('flushes').value),
+        miscellaneous: parseFloat(document.getElementById('miscellaneous').value),
+    };
+
+    // Send usage data to the server
+    try {
+        const response = await fetch('http://localhost:3000/api/usage', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                familySize: 4, // Replace this with actual family size value if needed
+                usage: usageData,
+            }),
+        });
+
+        const result = await response.json();
+        document.getElementById('message').textContent = result.message;
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('message').textContent = 'Failed to upload usage data.';
+    }
+});
+
+    </script>
+</body>
+</html>

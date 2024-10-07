@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Water Usage Tracker</title>
+    <style>
+        /* Same styles as before */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sign Up</h1>
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <input type="number" id="familySize" placeholder="Family Size" required>
+        <button onclick="signup()">Sign Up</button>
+        <p>Already have an account? <a href="login.html">Login here</a>.</p>
+    </div>
+
+    <script>
+        async function signup() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const familySize = document.getElementById('familySize').value;
+    
+            const response = await fetch('http://localhost:3000/api/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password, familySize }),
+            });
+    
+            const data = await response.json();
+            if (response.ok) {
+                alert(data.message);
+            } else {
+                alert(data.message || 'Signup failed');
+            }
+        }
+        </script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "prj",
+  "version": "1.0.0",
+  "description": "abc",
+  "main": "server.js",
+  "scripts": {
+    "test": "abc",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.3",
+    "express": "^4.21.0",
+    "mysql": "^2.18.1",
+    "prj": "file:"
+  }
+}

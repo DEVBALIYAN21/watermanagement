@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Usage Tracker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        :root {
+            --primary-color: #2193b0;
+            --secondary-color: #6dd5ed;
+            --text-color: #333;
+            --background-color: #f0f8ff;
+            --card-background: rgba(255, 255, 255, 0.9);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 900px;
+            width: 90%;
+            background-color: var(--card-background);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            max-height: 90vh;
+            scroll-behavior: smooth; /* For smooth scrolling */
+        }
+        
+        /* Custom water-drop-like scroll effect */
+        @keyframes waterDrop {
+            0% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(10px); /* Water drop bounce effect */
+            }
+            100% {
+                transform: translateY(0);
+            }
+        }
+        
+        /* Add a slight animation when the user scrolls */
+        .container::-webkit-scrollbar {
+            width: 12px;
+        }
+        
+        .container::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            animation: waterDrop 0.3s ease-out;
+        }
+        
+        .container::-webkit-scrollbar-track {
+            background-color: rgba(16, 96, 233, 0.5);
+            border-radius: 6px;
+        }
+        
+
+        h1, h2 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 100px;
+            height: 4px;
+            background-color: var(--secondary-color);
+            margin: 10px auto 0;
+            border-radius: 2px;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-top: 40px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        input, button {
+            width: 100%;
+            padding: 12px 15px 12px 40px;
+            border-radius: 8px;
+            border: 2px solid var(--secondary-color);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 40px;
+            color: var(--primary-color);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(33, 147, 176, 0.3);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 12px 15px;
+        }
+
+        button:hover {
+            background-color: #1c7a94;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(33, 147, 176, 0.3);
+        }
+
+        #chartContainer, #comparisonChart {
+            width: 100%;
+            margin: 30px 0;
+            background-color: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .comparison-result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .below-average {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .above-average {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .custom-alert {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            max-width: 80%;
+            text-align: center;
+        }
+
+        .custom-alert.show {
+            display: block;
+            animation: alertAppear 0.3s forwards;
+        }
+
+        @keyframes alertAppear {
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .custom-alert.success {
+            border-top: 5px solid #4CAF50;
+        }
+
+        .custom-alert.error {
+            border-top: 5px solid #f44336;
+        }
+
+        .custom-alert button {
+            margin-top: 20px;
+            width: auto;
+            padding: 10px 20px;
+        }
+
+        .water-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .water-drop {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+        }
+
+        .conservation-image {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            margin: 20px auto;
+            display: block;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .tip-box {
+            background-color: #e1f5fe;
+            border-left: 5px solid var(--primary-color);
+            padding: 15px;
+            margin-top: 30px;
+            border-radius: 5px;
+        }
+
+        .tip-box h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+
+        .tip-box ul {
+            padding-left: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            h2 {
+                font-size: 1.6rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="water-animation" id="waterAnimation"></div>
+    <div class="container">
+        <h1><i class="fas fa-tint"></i> Water Usage Tracker <i class="fas fa-tint"></i></h1>
+        
+        <img src="https://img.freepik.com/free-vector/colorful-water-day-design_603843-1235.jpg?t=st=1727500374~exp=1727503974~hmac=e8c6a36d40a96699d285af8efb0150b4ddb2c262743e43b93aea1677140005c5&w=740" alt="Water Conservation" class="conservation-image">
+
+        <div class="input-group">
+            <label for="familySize">Family Size</label>
+            <i class="fas fa-users"></i>
+            <input type="number" id="familySize" placeholder="Enter family size" />
+        </div>
+        <button onclick="setFamilySize()">Set Family Size</button>
+
+        <h2>Daily Water Usage</h2>
+        <div class="input-group">
+            <label for="drinking">Drinking (liters)</label>
+            <i class="fas fa-glass-water"></i>
+            <input type="number" id="drinking" placeholder="Drinking water usage" />
+        </div>
+        <div class="input-group">
+            <label for="cooking">Cooking (liters)</label>
+            <i class="fas fa-utensils"></i>
+            <input type="number" id="cooking" placeholder="Cooking water usage" />
+        </div>
+        <div class="input-group">
+            <label for="bathing">Bathing (liters)</label>
+            <i class="fas fa-shower"></i>
+            <input type="number" id="bathing" placeholder="Bathing water usage" />
+        </div>
+        <div class="input-group">
+            <label for="cleaning">Cleaning (liters)</label>
+            <i class="fas fa-broom"></i>
+            <input type="number" id="cleaning" placeholder="Cleaning water usage" />
+        </div>
+        <div class="input-group">
+            <label for="miscellaneous">Miscellaneous (liters)</label>
+            <i class="fas fa-ellipsis-h"></i>
+            <input type="number" id="miscellaneous" placeholder="Miscellaneous water usage" />
+        </div>
+        <button onclick="trackUsage()">Track Usage</button>
+
+        <h2>Usage Analysis</h2>
+        <div id="chartContainer">
+            <canvas id="usageChart"></canvas>
+        </div>
+        <div id="analysis"></div>
+
+        <h2>Usage Comparison</h2>
+        <div id="comparisonChart">
+            <canvas id="comparisonCanvas"></canvas>
+        </div>
+        <div id="comparisonAnalysis"></div>
+
+        <h2>Recommended Daily Water Limit</h2>
+        <div id="recommendedLimit"></div>
+
+        <h2>Set Custom Daily Water Limit</h2>
+        <div class="input-group">
+            <label for="waterLimit">Water Limit (liters)</label>
+            <i class="fas fa-tachometer-alt"></i>
+            <input type="number" id="waterLimit" placeholder="Enter custom water limit" />
+        </div>
+        <button onclick="setWaterLimit()">Set Limit</button>
+        <div id="usagePlan"></div>
+
+        <div class="tip-box">
+            <h3><i class="fas fa-lightbulb"></i> Water Conservation Tips</h3>
+            <ul>
+                <li>Fix leaky faucets and pipes</li>
+                <li>Take shorter showers</li>
+                <li>Use a water-efficient dishwasher</li>
+                <li>Water your garden early in the morning or late in the evening</li>
+                <li>Collect rainwater for watering plants</li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="customAlert" class="custom-alert">
+        <p id="alertMessage"></p>
+        <button onclick="closeAlert()">OK</button>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Water animation
+        function createWaterAnimation() {
+            const container = document.getElementById('waterAnimation');
+            const dropCount = 50;
+
+            for (let i = 0; i < dropCount; i++) {
+                createWaterDrop(container);
+            }
+        }
+
+        function createWaterDrop(container) {
+            const drop = document.createElement('div');
+            drop.classList.add('water-drop');
+            
+            const size = Math.random() * 10 + 5;
+            drop.style.width = `${size}px`;
+            drop.style.height = `${size}px`;
+            
+            const startX = Math.random() * 100;
+            const startY = Math.random() * -100;
+            
+            drop.style.left = `${startX}%`;
+            drop.style.top = `${startY}px`;
+            
+            container.appendChild(drop);
+            
+            animateWaterDrop(drop);
+        }
+
+        function animateWaterDrop(drop) {
+            const duration = Math.random() * 3 + 2;
+            const delay = Math.random() * 5;
+            
+            gsap.to(drop, {
+                y: '100vh',
+                duration: duration,
+                delay: delay,
+                ease: 'none',
+                onComplete: () => {
+                    drop.style.top = `${Math.random() * -100}px`;
+                    animateWaterDrop(drop);
+                }
+            });
+        }
+
+        // Improved alert function
+        function showAlert(message, type = 'success') {
+            const alertBox = document.getElementById('customAlert');
+            const alertMessage = document.getElementById('alertMessage');
+            alertMessage.textContent = message;
+            alertBox.className = `custom-alert ${type}`;
+            alertBox.classList.add('show');
+        }
+
+        function closeAlert() {
+            const alertBox = document.getElementById('customAlert');
+            alertBox.classList.remove('show');
+        }
+
+        // Initialize water animation
+        createWaterAnimation();
+    </script>
+</body>
+
+</html>
