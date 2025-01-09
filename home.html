@@ -1,432 +1,839 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Water Usage Tracker</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <title>Water Usage & Environmental Impact Tracker</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
         :root {
-            --primary-color: #2193b0;
-            --secondary-color: #6dd5ed;
-            --text-color: #333;
-            --background-color: #f0f8ff;
-            --card-background: rgba(255, 255, 255, 0.9);
+            --primary: #0ea5e9;
+            --primary-dark: #0284c7;
+            --secondary: #6366f1;
+            --background: #0f172a;
+            --surface: rgba(255, 255, 255, 0.05);
+            --text: #f8fafc;
+            --text-secondary: #94a3b8;
+            --success: #22c55e;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes ripple {
+            0% { transform: scale(1); opacity: 0.4; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        @keyframes wave {
+            0% { transform: translateX(-100%) rotate(30deg); }
+            100% { transform: translateX(100%) rotate(30deg); }
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
+            background: linear-gradient(45deg, #0f172a, #1e293b, #0f172a);
+            background-size: 200% 200%;
+            animation: gradient 15s ease infinite;
+            color: var(--text);
             min-height: 100vh;
-            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
-            color: var(--text-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            line-height: 1.5;
         }
+
         .container {
-            max-width: 900px;
-            width: 90%;
-            background-color: var(--card-background);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-            overflow-y: auto;
-            max-height: 90vh;
-            scroll-behavior: smooth; /* For smooth scrolling */
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            opacity: 0;
+            animation: fadeIn 1s ease forwards;
         }
-        
-        /* Custom water-drop-like scroll effect */
-        @keyframes waterDrop {
-            0% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(10px); /* Water drop bounce effect */
-            }
-            100% {
-                transform: translateY(0);
-            }
-        }
-        
-        /* Add a slight animation when the user scrolls */
-        .container::-webkit-scrollbar {
-            width: 12px;
-        }
-        
-        .container::-webkit-scrollbar-thumb {
-            background-color: rgba(0, 0, 0, 0.3);
-            border-radius: 6px;
-            animation: waterDrop 0.3s ease-out;
-        }
-        
-        .container::-webkit-scrollbar-track {
-            background-color: rgba(16, 96, 233, 0.5);
-            border-radius: 6px;
-        }
-        
 
-        h1, h2 {
-            color: var(--primary-color);
+        .header {
             text-align: center;
-            margin-bottom: 30px;
-        }
-
-        h1 {
-            font-size: 2.8rem;
-            margin-bottom: 20px;
+            margin-bottom: 3rem;
             position: relative;
         }
 
-        h1::after {
-            content: '';
-            display: block;
-            width: 100px;
-            height: 4px;
-            background-color: var(--secondary-color);
-            margin: 10px auto 0;
-            border-radius: 2px;
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            animation: float 3s ease-in-out infinite;
         }
 
-        h2 {
-            font-size: 2rem;
-            margin-top: 40px;
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            transform: translateY(20px);
+            opacity: 0;
+            animation: scaleIn 0.5s ease forwards;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(14, 165, 233, 0.2);
+        }
+
+        .card h2 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            font-size: 1.25rem;
         }
 
         .input-group {
-            margin-bottom: 20px;
-            position: relative;
-        }
+    position: relative;
+    margin-bottom: 1.5rem;
+}
 
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: var(--primary-color);
-        }
+.input-group label {
+    position: absolute;
+    left: 3rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+    pointer-events: none;
+    font-size: 1rem; /* Set the font size */
+}
 
-        input, button {
-            width: 100%;
-            padding: 12px 15px 12px 40px;
-            border-radius: 8px;
-            border: 2px solid var(--secondary-color);
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
+.input-group input {
+    width: 100%;
+    padding: 1rem;
+    padding-left: 3rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    color: var(--text);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
 
-        .input-group i {
-            position: absolute;
-            left: 15px;
-            top: 40px;
-            color: var(--primary-color);
-        }
+.input-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: rgba(255, 255, 255, 0.1);
+}
 
-        input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 10px rgba(33, 147, 176, 0.3);
-        }
+/* When the input is focused or has content, adjust the label position */
+.input-group input:focus + label,
+.input-group input:not(:placeholder-shown) + label {
+    top: -0.8rem;
+    left: 1rem;
+    font-size: 0.875rem; /* Shrink the label */
+    color: var(--primary); /* Change label color when focused or has text */
+}
 
-        button {
-            background-color: var(--primary-color);
-            color: white;
+/* Icon inside the input */
+.input-group i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--primary);
+}
+
+        .button {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--text);
             border: none;
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
             cursor: pointer;
-            font-weight: 600;
-            margin-top: 10px;
+            transition: all 0.3s ease;
+            width: 100%;
             text-transform: uppercase;
             letter-spacing: 1px;
-            padding: 12px 15px;
+            font-weight: 500;
         }
 
-        button:hover {
-            background-color: #1c7a94;
+        .button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(33, 147, 176, 0.3);
+            box-shadow: 0 5px 15px rgba(14, 165, 233, 0.3);
         }
 
-        #chartContainer, #comparisonChart {
-            width: 100%;
-            margin: 30px 0;
-            background-color: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        .progress-container {
+            background: var(--surface);
+            border-radius: 0.5rem;
+            height: 0.75rem;
+            overflow: hidden;
+            margin: 1rem 0;
         }
 
-        .comparison-result {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 10px;
-            font-weight: bold;
+        .progress-bar {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.2) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            animation: wave 2s infinite linear;
+        }
+
+        .progress-bar.warning {
+            background: var(--error);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            padding: 1rem;
+            border-radius: 0.5rem;
             text-align: center;
+            border: 1px solid var(--border);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card .value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .eco-score {
+            background: var(--surface);
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            margin-top: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .eco-score-value {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--success);
+            margin: 1rem 0;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .eco-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-weight: 500;
+            margin-top: 1rem;
             transition: all 0.3s ease;
         }
 
-        .below-average {
-            background-color: #d4edda;
-            color: #155724;
-        }
-
-        .above-average {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-
-        .custom-alert {
-            display: none;
-            position: fixed;
+        .water-ripple {
+            position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) scale(0.9);
-            background-color: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            max-width: 80%;
-            text-align: center;
-        }
-
-        .custom-alert.show {
-            display: block;
-            animation: alertAppear 0.3s forwards;
-        }
-
-        @keyframes alertAppear {
-            to {
-                opacity: 1;
-                transform: translate(-50%, -50%) scale(1);
-            }
-        }
-
-        .custom-alert.success {
-            border-top: 5px solid #4CAF50;
-        }
-
-        .custom-alert.error {
-            border-top: 5px solid #f44336;
-        }
-
-        .custom-alert button {
-            margin-top: 20px;
-            width: auto;
-            padding: 10px 20px;
-        }
-
-        .water-animation {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .water-drop {
-            position: absolute;
-            background-color: rgba(255, 255, 255, 0.7);
+            transform: translate(-50%, -50%);
+            width: 10px;
+            height: 10px;
+            background: var(--primary);
             border-radius: 50%;
+            animation: ripple 2s linear infinite;
         }
 
-        .conservation-image {
-            width: 100%;
-            max-width: 400px;
-            height: auto;
-            margin: 20px auto;
-            display: block;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            background: var(--surface);
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            transform: translateX(200%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .tip-box {
-            background-color: #e1f5fe;
-            border-left: 5px solid var(--primary-color);
-            padding: 15px;
-            margin-top: 30px;
-            border-radius: 5px;
+        .toast.show {
+            transform: translateX(0);
         }
 
-        .tip-box h3 {
-            color: var(--primary-color);
-            margin-top: 0;
+        .toast.success {
+            border-left: 4px solid var(--success);
         }
 
-        .tip-box ul {
-            padding-left: 20px;
+        .toast.error {
+            border-left: 4px solid var(--error);
+        }
+
+        .chart-container {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: var(--surface);
+            border-radius: 1rem;
+            border: 1px solid var(--border);
         }
 
         @media (max-width: 768px) {
             .container {
-                padding: 20px;
+                padding: 1rem;
             }
 
-            h1 {
-                font-size: 2.2rem;
+            .header h1 {
+                font-size: 2rem;
             }
 
-            h2 {
-                font-size: 1.6rem;
+            .grid {
+                gap: 1rem;
+            }
+
+            .card {
+                padding: 1rem;
             }
         }
+
+        [class*="card"]:nth-child(1) { animation-delay: 0.1s; }
+        [class*="card"]:nth-child(2) { animation-delay: 0.2s; }
+        [class*="card"]:nth-child(3) { animation-delay: 0.3s; }
+        [class*="card"]:nth-child(4) { animation-delay: 0.4s; }
+        .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: var(--background);
+    border: 1px solid var(--border);
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 1rem;
+    width: 80%;
+    max-width: 600px;
+    animation: scaleIn 0.3s ease;
+}
+
+.close {
+    color: var(--text-secondary);
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: var(--primary);
+}
+
+.stat-card {
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(14, 165, 233, 0.2);
+}
     </style>
 </head>
-
 <body>
-    <div class="water-animation" id="waterAnimation"></div>
     <div class="container">
-        <h1><i class="fas fa-tint"></i> Water Usage Tracker <i class="fas fa-tint"></i></h1>
+        <header class="header">
+            <h1><i class="fas fa-tint"></i> Water Usage Tracker</h1>
+            <p>Monitor and manage your daily water consumption</p>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <h2><i class="fas fa-users"></i> Household Settings</h2>
+                <div class="input-group">
+                   
+                    <i class="fas fa-users"></i>
+                    <input type="number" id="familySize" min="1" placeholder="Family Size" >
+                </div>
+                <div class="input-group">
+                   
+                    <i class="fas fa-tachometer-alt"></i>
+                    <input type="number" id="waterLimit" min="0" step="0.1" placeholder="Daily Water Limit (L)" >
+                </div>
+                <button class="button" onclick="updateSettings()">Save Settings</button>
+            </div>
+
+            <div class="card">
+                <h2><i class="fas fa-chart-bar"></i> Usage Progress</h2>
+                <div class="progress-container">
+                    <div id="progressBar" class="progress-bar"></div>
+                </div>
+                <p id="progressText" class="text-center"></p>
+                <div class="stats">
+                    <div class="stat-card">
+                        <div id="totalUsage" class="value">0 L</div>
+                        <div class="label">Total Usage</div>
+                    </div>
+                    <div class="stat-card">
+                        <div id="remainingLimit" class="value">0 L</div>
+                        <div class="label">Remaining</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2><i class="fas fa-faucet"></i> Daily Water Usage</h2>
+            <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                <div class="input-group">
+                    <label for="drinking"></label>
+                    <i class="fas fa-glass-water"></i>
+                    <input type="number" id="drinking" min="0" step="0.1" placeholder="Drinking Water (L)">
+                </div>
+                <div class="input-group">
+                    <label for="cooking"></label>
+                    <i class="fas fa-utensils"></i>
+                    <input type="number" id="cooking" min="0" step="0.1" placeholder="Cooking (L)">
+                </div>
+                <div class="input-group">
+                    <label for="bathing"></label>
+                    <i class="fas fa-shower"></i>
+                    <input type="number" id="bathing" min="0" step="0.1" placeholder="Bathing (L)">
+                </div>
+                <div class="input-group">
+                    <label for="cleaning"></label>
+                    <i class="fas fa-broom"></i>
+                    <input type="number" id="cleaning" min="0" step="0.1" placeholder="Cleaning (L)">
+                </div>
+            </div>
+            <button class="button" onclick="trackUsage()">Track Usage</button>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2><i class="fas fa-globe-americas"></i> Environmental Impact</h2>
+                <div class="eco-score">
+                    <div class="water-ripple"></div>
+                    <div id="ecoScoreValue" class="eco-score-value">0</div>
+                    <div id="ecoBadge" class="eco-badge">Calculating...</div>
+                </div>
+                <div class="stats">
+                    <div class="stat-card" onclick="openModal('footprint')">
+                        <i class="fas fa-cloud-rain"></i>
+                        <div id="waterFootprint" class="value">0 L</div>
+                        <div class="label">Annual Footprint</div>
+                    </div>
+                    <div class="stat-card" onclick="openModal('energy')">
+                        <i class="fas fa-bolt"></i>
+                        <div id="energySaved" class="value">0 kWh</div>
+                        <div class="label">Energy Saved</div>
+                    </div>
+                    <div class="stat-card" onclick="openModal('cost')">
+                        <i class="fa-solid fa-indian-rupee-sign"></i>
+                        <div id="costSavings" class="value">₹0</div>
+                        <div class="label">Cost Savings </div>
+                    </div>
+                </div>
+            </div>
+       
         
-        <img src="https://img.freepik.com/free-vector/colorful-water-day-design_603843-1235.jpg?t=st=1727500374~exp=1727503974~hmac=e8c6a36d40a96699d285af8efb0150b4ddb2c262743e43b93aea1677140005c5&w=740" alt="Water Conservation" class="conservation-image">
+        <!-- Add Modal HTML -->
+        <div id="modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2 id="modalTitle"></h2>
+                <div id="modalContent"></div>
+            </div>
+        </div>
 
-        <div class="input-group">
-            <label for="familySize">Family Size</label>
-            <i class="fas fa-users"></i>
-            <input type="number" id="familySize" placeholder="Enter family size" />
+            <div class="card">
+                <h2><i class="fas fa-trophy"></i> Achievements</h2>
+                <div id="achievements"></div>
+            </div>
         </div>
-        <button onclick="setFamilySize()">Set Family Size</button>
 
-        <h2>Daily Water Usage</h2>
-        <div class="input-group">
-            <label for="drinking">Drinking (liters)</label>
-            <i class="fas fa-glass-water"></i>
-            <input type="number" id="drinking" placeholder="Drinking water usage" />
+        <div class="card">
+            <h2><i class="fas fa-chart-line"></i> Usage Analysis</h2>
+            <div class="chart-container">
+                <canvas id="usageChart"></canvas>
+            </div>
         </div>
-        <div class="input-group">
-            <label for="cooking">Cooking (liters)</label>
-            <i class="fas fa-utensils"></i>
-            <input type="number" id="cooking" placeholder="Cooking water usage" />
-        </div>
-        <div class="input-group">
-            <label for="bathing">Bathing (liters)</label>
-            <i class="fas fa-shower"></i>
-            <input type="number" id="bathing" placeholder="Bathing water usage" />
-        </div>
-        <div class="input-group">
-            <label for="cleaning">Cleaning (liters)</label>
-            <i class="fas fa-broom"></i>
-            <input type="number" id="cleaning" placeholder="Cleaning water usage" />
-        </div>
-        <div class="input-group">
-            <label for="miscellaneous">Miscellaneous (liters)</label>
-            <i class="fas fa-ellipsis-h"></i>
-            <input type="number" id="miscellaneous" placeholder="Miscellaneous water usage" />
-        </div>
-        <button onclick="trackUsage()">Track Usage</button>
 
-        <h2>Usage Analysis</h2>
-        <div id="chartContainer">
-            <canvas id="usageChart"></canvas>
-        </div>
-        <div id="analysis"></div>
-
-        <h2>Usage Comparison</h2>
-        <div id="comparisonChart">
-            <canvas id="comparisonCanvas"></canvas>
-        </div>
-        <div id="comparisonAnalysis"></div>
-
-        <h2>Recommended Daily Water Limit</h2>
-        <div id="recommendedLimit"></div>
-
-        <h2>Set Custom Daily Water Limit</h2>
-        <div class="input-group">
-            <label for="waterLimit">Water Limit (liters)</label>
-            <i class="fas fa-tachometer-alt"></i>
-            <input type="number" id="waterLimit" placeholder="Enter custom water limit" />
-        </div>
-        <button onclick="setWaterLimit()">Set Limit</button>
-        <div id="usagePlan"></div>
-
-        <div class="tip-box">
-            <h3><i class="fas fa-lightbulb"></i> Water Conservation Tips</h3>
-            <ul>
-                <li>Fix leaky faucets and pipes</li>
-                <li>Take shorter showers</li>
-                <li>Use a water-efficient dishwasher</li>
-                <li>Water your garden early in the morning or late in the evening</li>
-                <li>Collect rainwater for watering plants</li>
-            </ul>
-        </div>
+        
     </div>
 
-    <div id="customAlert" class="custom-alert">
-        <p id="alertMessage"></p>
-        <button onclick="closeAlert()">OK</button>
-    </div>
-
-    <script src="script.js"></script>
     <script>
-        // Water animation
-        function createWaterAnimation() {
-            const container = document.getElementById('waterAnimation');
-            const dropCount = 50;
+        let currentWaterLimit = 150;
+        let familySize = 1;
+        const averageWaterUsage = 150; // Average daily water usage per person in liters
 
-            for (let i = 0; i < dropCount; i++) {
-                createWaterDrop(container);
+        // Initialize chart
+        const ctx = document.getElementById('usageChart').getContext('2d');
+        const usageChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Drinking', 'Cooking', 'Bathing', 'Cleaning'],
+                datasets: [{
+                    label: 'Water Usage (Liters)',
+                    data: [0, 0, 0, 0],
+                    backgroundColor: [
+                        'rgba(14, 165, 233, 0.7)',
+                        'rgba(99, 102, 241, 0.7)',
+                        'rgba(14, 165, 233, 0.7)',
+                        'rgba(99, 102, 241, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(14, 165, 233, 1)',
+                        'rgba(99, 102, 241, 1)',
+                        'rgba(14, 165, 233, 1)',
+                        'rgba(99, 102, 241, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#94a3b8'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#94a3b8'
+                        }
+                    }
+                }
+            }
+        });
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                ${message}
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => {
+                        document.body.removeChild(toast);
+                    }, 300);
+                }, 3000);
+            }, 100);
+        }
+
+        function updateSettings() {
+            const newFamilySize = parseInt(document.getElementById('familySize').value);
+            const newLimit = parseFloat(document.getElementById('waterLimit').value);
+
+            if (newFamilySize < 1) {
+                showToast('Please enter a valid family size', 'error');
+                return;
+            }
+
+            if (newLimit <= 0) {
+                showToast('Please enter a valid water limit', 'error');
+                return;
+            }
+
+            familySize = newFamilySize;
+            currentWaterLimit = newLimit;
+            updateProgress();
+            showToast('Settings updated successfully!');
+        }
+
+        function trackUsage() {
+            const inputs = ['drinking', 'cooking', 'bathing', 'cleaning'];
+            const values = inputs.map(id => parseFloat(document.getElementById(id).value) || 0);
+            
+            if (values.some(v => v < 0)) {
+                showToast('Please enter valid values', 'error');
+                return;
+            }
+
+            // Update chart
+            usageChart.data.datasets[0].data = values;
+            usageChart.update();
+
+            updateProgress();
+            updateEnvironmentalImpact(values.reduce((a, b) => a + b, 0));
+            updateWaterQuality();
+            showToast('Water usage tracked successfully!');
+        }
+
+        function updateProgress() {
+            const values = ['drinking', 'cooking', 'bathing', 'cleaning']
+                .map(id => parseFloat(document.getElementById(id).value) || 0);
+            const total = values.reduce((a, b) => a + b, 0);
+            
+            const percentage = (total / currentWaterLimit) * 100;
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            
+            progressBar.style.width = Math.min(percentage, 100) + '%';
+            progressBar.classList.toggle('warning', percentage >= 90);
+            
+            document.getElementById('totalUsage').textContent = `${total.toFixed(1)} L`;
+            document.getElementById('remainingLimit').textContent = 
+                `${Math.max(0, currentWaterLimit - total).toFixed(1)} L`;
+            
+            if (percentage >= 90) {
+                progressText.innerHTML = `<span style="color: var(--error)">Warning: ${percentage.toFixed(1)}% of limit used</span>`;
+            } else {
+                progressText.textContent = `${percentage.toFixed(1)}% of limit used`;
             }
         }
 
-        function createWaterDrop(container) {
-            const drop = document.createElement('div');
-            drop.classList.add('water-drop');
+        function calculateEcoScore(usage) {
+            const baseScore = 100;
+            const familyFactor = familySize * 50; // Baseline usage per person
+            const efficiency = (familyFactor - usage) / familyFactor * 100;
+            const score = Math.max(0, Math.min(100, baseScore + efficiency));
             
-            const size = Math.random() * 10 + 5;
-            drop.style.width = `${size}px`;
-            drop.style.height = `${size}px`;
-            
-            const startX = Math.random() * 100;
-            const startY = Math.random() * -100;
-            
-            drop.style.left = `${startX}%`;
-            drop.style.top = `${startY}px`;
-            
-            container.appendChild(drop);
-            
-            animateWaterDrop(drop);
+            document.getElementById('ecoScoreValue').textContent = Math.round(score);
+            updateEcoBadge(score);
+            return score;
         }
 
-        function animateWaterDrop(drop) {
-            const duration = Math.random() * 3 + 2;
-            const delay = Math.random() * 5;
+        function updateEcoBadge(score) {
+            const badge = document.getElementById('ecoBadge');
+            badge.className = 'eco-badge';
             
-            gsap.to(drop, {
-                y: '100vh',
-                duration: duration,
-                delay: delay,
-                ease: 'none',
-                onComplete: () => {
-                    drop.style.top = `${Math.random() * -100}px`;
-                    animateWaterDrop(drop);
+            if (score >= 90) {
+                badge.classList.add('excellent');
+                badge.textContent = 'Excellent';
+            } else if (score >= 70) {
+                badge.classList.add('good');
+                badge.textContent = 'Good';
+            } else if (score >= 50) {
+                badge.classList.add('fair');
+                badge.textContent = 'Fair';
+            } else {
+                badge.classList.add('poor');
+                badge.textContent = 'Needs Improvement';
+            }
+        }
+        function updateEnvironmentalImpact(usage) {
+    const waterFootprint = usage * 365; // Annual water footprint
+    const energySaved = ((averageWaterUsage*familySize) - usage) * 0.0015; // kWh per liter saved
+    const costSavings = energySaved * 0.12 * 83; // Average electricity cost per kWh in INR (1 USD = 83 INR, adjust as needed)
+    
+    document.getElementById('waterFootprint').textContent = `${Math.round(waterFootprint)} L`;
+    document.getElementById('energySaved').textContent = `${energySaved.toFixed(2)} kWh`;
+    document.getElementById('costSavings').textContent = `₹${costSavings.toFixed(2)}`;
+    
+    const score = calculateEcoScore(usage);
+    updateAchievements(score);
+}
+
+        const achievements = [
+            { id: 'water_saver', icon: 'trophy', title: 'Water Saver', description: 'Used 20% less water than average', threshold: 20 },
+            { id: 'eco_warrior', icon: 'leaf', title: 'Eco Warrior', description: 'Maintained excellent rating for 7 days', threshold: 90 },
+            { id: 'conscious_consumer', icon: 'star', title: 'Conscious Consumer', description: 'Set and followed water limits', threshold: 50 }
+        ];
+
+        function updateAchievements(score) {
+            const achievementsDiv = document.getElementById('achievements');
+            achievementsDiv.innerHTML = '';
+            
+            achievements.forEach(achievement => {
+                if (score >= achievement.threshold) {
+                    achievementsDiv.innerHTML += `
+                        <div class="achievement">
+                            <i class="fas fa-${achievement.icon}"></i>
+                            <div>
+                                <h3>${achievement.title}</h3>
+                                <p>${achievement.description}</p>
+                            </div>
+                        </div>
+                    `;
                 }
             });
         }
 
-        // Improved alert function
-        function showAlert(message, type = 'success') {
-            const alertBox = document.getElementById('customAlert');
-            const alertMessage = document.getElementById('alertMessage');
-            alertMessage.textContent = message;
-            alertBox.className = `custom-alert ${type}`;
-            alertBox.classList.add('show');
+        function updateWaterQuality() {
+            const ph = 7.2 + Math.random() * 0.6;
+            const hardness = 150 + Math.random() * 50;
+            const tds = 200 + Math.random() * 100;
+            
+            document.getElementById('phLevel').style.width = `${(ph/14)*100}%`;
+            document.getElementById('hardness').style.width = `${(hardness/300)*100}%`;
+            document.getElementById('tds').style.width = `${(tds/500)*100}%`;
+            
+            document.getElementById('phValue').textContent = ph.toFixed(1);
+            document.getElementById('hardnessValue').textContent = `${Math.round(hardness)} mg/L`;
+            document.getElementById('tdsValue').textContent = `${Math.round(tds)} ppm`;
         }
 
-        function closeAlert() {
-            const alertBox = document.getElementById('customAlert');
-            alertBox.classList.remove('show');
-        }
+        // Initialize water quality on load
+        updateWaterQuality();
 
-        // Initialize water animation
-        createWaterAnimation();
+        // Add periodic updates for real-time feel
+        setInterval(updateWaterQuality, 30000);
     </script>
+    <script>
+        // Previous JavaScript code remains same, add these functions:
+        
+        function openModal(type) {
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalContent = document.getElementById('modalContent');
+            
+            switch(type) {
+                case 'footprint':
+                    modalTitle.innerHTML = '<i class="fas fa-cloud-rain"></i> Annual Water Footprint';
+                    modalContent.innerHTML = `
+                        <p style="color: violet;">Your annual water footprint represents your total water consumption projected over a year. This includes:</p>
+                        <ul style="list-style-type: none; padding: 0;">
+                            <li><i class="fas fa-check"></i> Direct water usage (drinking, bathing, etc.)</li>
+                            <li><i class="fas fa-check"></i> Impact on local water resources</li>
+                            <li><i class="fas fa-check"></i> Contribution to water scarcity</li>
+                        </ul>
+                        <p>Current annual projection: <strong>${document.getElementById('waterFootprint').textContent}</strong></p>
+                    `;
+                    break;
+                    
+                case 'energy':
+                    modalTitle.innerHTML = '<i class="fas fa-bolt"></i> Energy Savings ';
+                    modalContent.innerHTML = `
+                        <p style="color: violet;">This is calculated According to the Usage of an Average Family</p>
+                        <p>Energy savings are calculated based on reduced water heating and pumping needs:</p>
+                        <ul style="list-style-type: none; padding: 0;">
+                            <li><i class="fas fa-check"></i> Water heating efficiency</li>
+                            <li><i class="fas fa-check"></i> Pumping system optimization</li>
+                            <li><i class="fas fa-check"></i> Treatment plant energy reduction</li>
+                        </ul>
+                        <p>Current energy savings: <strong>${document.getElementById('energySaved').textContent}</strong></p>
+                    `;
+                    break;
+                    
+                case 'cost':
+                    modalTitle.innerHTML = '<i class="fa-solid fa-indian-rupee-sign"></i> Cost Savings ';
+                    modalContent.innerHTML = `
+                    <p style="color: violet;">This is calculated According to the Usage of an Average Family</p>
+                        <p>Your cost savings include:</p>
+                        <ul style="list-style-type: none; padding: 0;">
+                            <li><i class="fas fa-check"></i> Reduced water bill</li>
+                            <li><i class="fas fa-check"></i> Lower energy costs</li>
+                            <li><i class="fas fa-check"></i> Maintenance savings</li>
+                        </ul>
+                        <p>Total savings: <strong>${document.getElementById('costSavings').textContent}</strong></p>
+                    `;
+                    break;
+            }
+            
+            modal.style.display = "block";
+        }
+        
+        // Close modal when clicking the X
+        document.querySelector('.close').onclick = function() {
+            document.getElementById('modal').style.display = "none";
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+        </script>
+        
 </body>
-
 </html>
